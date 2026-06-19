@@ -59,4 +59,88 @@ function checkNewBadges(state) {
   return newly;
 }
 
-window.Gamify = { levelFromXp, xpInLevel, xpToNext, updateStreak, BADGES, checkNewBadges };
+/*
+ * 合格めやすメーター（受験準備度）
+ *
+ * ⚠️ これは「本番の合格率」ではありません。
+ * このアプリでの練習だけをもとにした、がんばりの“めやす”です。
+ *
+ * 5つの要素を合わせて 0〜100 で表します。
+ *   ・正答率     … 全体でどれだけ正解できているか        (30%)
+ *   ・バランス   … いちばん苦手な分野の正答率（弱点）     (25%)
+ *   ・分野の網羅 … 8分野をどれだけ練習したか              (20%)
+ *   ・学習量     … これまでに解いた問題数                 (15%)
+ *   ・継続       … 直近2週間で勉強した日数                (10%)
+ */
+const READINESS_STAGES = [
+  { min: 0,  label: "スタート",         emoji: "🌱" },
+  { min: 20, label: "きほんづくり",     emoji: "📗" },
+  { min: 40, label: "のびざかり",       emoji: "📈" },
+  { min: 60, label: "じっせん力アップ", emoji: "🔥" },
+  { min: 75, label: "合格圏が見えた",   emoji: "🌟" },
+  { min: 90, label: "合格まであと一歩", emoji: "👑" },
+];
+
+function readiness(state) {
+  const ids = Object.keys(CATEGORIES);
+  const SEEN_OK = 5; // 「練習した分野」とみなす問題数
+
+  // 1) 全体の正答率
+  const acc = state.totalAnswered > 0 ? state.totalCorrect / state.totalAnswered : 0;
+
+  // 2) 十分に練習した分野
+  const practiced = ids.filter((id) => state.cat[id] && state.cat[id].seen >= SEEN_OK);
+  const coverage = practiced.length / ids.length;
+
+  // 3) 学習量（200問で満点）
+  const volume = Math.min(state.totalAnswered / 200, 1);
+
+  // 4) バランス＝練習した分野の中で最も低い正答率（弱点）。全分野やってこそ満点
+  let weakest = 0;
+  if (practiced.length) {
+    const minAcc = Math.min(...practiced.map((id) => state.cat[id].correct / state.cat[id].seen));
+    weakest = minAcc * (practiced.length / ids.length);
+  }
+
+  // 5) 継続（直近14日で勉強した日数。10日で満点）
+  const counts = state.dailyCounts || {};
+  let activeDays = 0;
+  for (let i = 0; i < 14; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    if ((counts[Store.todayStr(d)] || 0) > 0) activeDays++;
+  }
+  const consistency = Math.min(activeDays / 10, 1);
+
+  const score = Math.round(
+    (acc * 0.30 + weakest * 0.25 + coverage * 0.20 + volume * 0.15 + consistency * 0.10) * 100
+  );
+
+  // ステージ
+  let stage = READINESS_STAGES[0];
+  for (const s of READINESS_STAGES) if (score >= s.min) stage = s;
+
+  // つぎの一手（アドバイス）
+  let advice;
+  if (state.totalAnswered < 10) {
+    advice = "まずは色々な分野を試して、自分の得意・苦手を見つけよう！";
+  } else if (coverage < 1) {
+    const notYet = ids.filter((id) => !practiced.includes(id));
+    const c = CATEGORIES[notYet[0]];
+    advice = `まだ練習が少ない「${c.emoji}${c.name}」をやってみよう。全分野そろえると点が伸びるよ！`;
+  } else {
+    let worst = practiced[0], worstAcc = 2;
+    for (const id of practiced) {
+      const a = state.cat[id].correct / state.cat[id].seen;
+      if (a < worstAcc) { worstAcc = a; worst = id; }
+    }
+    const c = CATEGORIES[worst];
+    advice = score >= 90
+      ? "仕上げの時期！まちがえた問題の復習を中心にしよう。"
+      : `いまの伸ばしどころは「${c.emoji}${c.name}」。重点的に練習しよう！`;
+  }
+
+  return { score, stage, advice, parts: { acc, weakest, coverage, volume, consistency } };
+}
+
+window.Gamify = { levelFromXp, xpInLevel, xpToNext, updateStreak, BADGES, checkNewBadges, readiness, READINESS_STAGES };

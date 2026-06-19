@@ -40,6 +40,7 @@ function defaultState() {
     todayDate: "",         // todayCount を数えている日付
     dailyCounts: {},       // 1日ごとに実施した問題数 { "2026-06-19": 12, ... }
     dailyCorrect: {},      // 1日ごとに正解した数   { "2026-06-19": 9, ... }
+    examDate: "",          // 受験日（"2027-02-03" など）。カウントダウンに使う
   };
 }
 

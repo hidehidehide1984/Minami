@@ -65,6 +65,19 @@ main { max-width: 620px; margin: 0 auto; padding: 16px; }
 
 /* ===== ホーム ===== */
 .greeting { font-size: 22px; margin: 6px 4px 14px; }
+
+/* 合格めやすメーター */
+.readiness-card { background: linear-gradient(135deg,#fff,#eef3ff); border: 1px solid #e0e8fb; }
+.countdown { font-size: 12px; font-weight: 800; color: #e05656; white-space: nowrap; }
+.readiness-main { display: flex; align-items: center; gap: 14px; }
+.readiness-score { display: flex; align-items: baseline; font-weight: 800; color: var(--primary); }
+.readiness-score #readiness-num { font-size: 40px; line-height: 1; }
+.readiness-unit { font-size: 16px; margin-left: 2px; }
+.readiness-info { flex: 1; }
+.readiness-stage { font-weight: 800; font-size: 15px; margin-bottom: 6px; }
+.readiness-fill { background: linear-gradient(90deg,#ffd166,#06d6a0); }
+.readiness-advice { margin-top: 12px; font-size: 13px; font-weight: 700; color: #3a3d52; }
+.readiness-note { margin-top: 8px; font-size: 11px; color: var(--muted); }
 .mission-msg { font-size: 13px; color: var(--muted); margin-top: 8px; }
 .mission-fill { background: linear-gradient(90deg,#06d6a0,#1b9aaa) !important; }
 

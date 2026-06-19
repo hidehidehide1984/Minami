@@ -86,9 +86,30 @@ function renderHome() {
     adviceEl.textContent = "いいちょうし！このまま続けよう。";
   }
 
+  renderReadiness();
   renderCategoryButtons();
   renderBadgesPreview();
   renderStreakCalendar();
+}
+
+// 合格めやすメーター＋受験日カウントダウン（ホーム）
+function renderReadiness() {
+  const r = Gamify.readiness(state);
+  document.getElementById("readiness-num").textContent = r.score;
+  document.getElementById("readiness-fill").style.width = r.score + "%";
+  document.getElementById("readiness-stage").textContent = `${r.stage.emoji} ${r.stage.label}`;
+  document.getElementById("readiness-advice").textContent = "🧭 " + r.advice;
+
+  // 受験日カウントダウン
+  const el = document.getElementById("exam-countdown");
+  if (state.examDate) {
+    const days = Store.daysBetween(Store.todayStr(), state.examDate);
+    if (days > 0) el.textContent = `受験まで あと ${days}日`;
+    else if (days === 0) el.textContent = "いよいよ受験本番！";
+    else el.textContent = "";
+  } else {
+    el.textContent = "";
+  }
 }
 
 function renderCategoryButtons() {
@@ -350,6 +371,8 @@ function renderStats() {
   document.getElementById("stat-correct").textContent = correct;
   document.getElementById("stat-rate").textContent = rate + "%";
 
+  renderReadinessBreakdown();
+
   const wrap = document.getElementById("cat-stats");
   wrap.innerHTML = "";
   for (const id in CATEGORIES) {
@@ -425,10 +448,36 @@ function renderDailyHistory() {
   });
 }
 
+// 合格めやすの内わけ（5要素）を棒グラフで表示
+function renderReadinessBreakdown() {
+  const wrap = document.getElementById("readiness-breakdown");
+  if (!wrap) return;
+  const r = Gamify.readiness(state);
+  const rows = [
+    { name: "正答率", v: r.parts.acc, color: "#2d9cdb" },
+    { name: "弱点の少なさ", v: r.parts.weakest, color: "#9b59b6" },
+    { name: "分野の網羅", v: r.parts.coverage, color: "#27ae60" },
+    { name: "学習量", v: r.parts.volume, color: "#f2994a" },
+    { name: "継続", v: r.parts.consistency, color: "#e05656" },
+  ];
+  wrap.innerHTML = "";
+  rows.forEach((row) => {
+    const pct = Math.round(row.v * 100);
+    const el = document.createElement("div");
+    el.className = "stat-row";
+    el.innerHTML =
+      `<div class="stat-name">${row.name}</div>` +
+      `<div class="bar"><div class="bar-fill" style="width:${pct}%;background:${row.color}"></div></div>` +
+      `<div class="stat-val">${pct}%</div>`;
+    wrap.appendChild(el);
+  });
+}
+
 /* ---------- 設定（名前・目標・リセット） ---------- */
 function openSettings() {
   document.getElementById("set-name").value = state.name || "";
   document.getElementById("set-goal").value = state.dailyGoal;
+  document.getElementById("set-exam").value = state.examDate || "";
   document.getElementById("settings-modal").classList.remove("hidden");
 }
 function saveSettings() {
@@ -437,6 +486,7 @@ function saveSettings() {
   if (isNaN(g) || g < 1) g = 5;
   if (g > 50) g = 50;
   state.dailyGoal = g;
+  state.examDate = document.getElementById("set-exam").value || "";
   Store.saveState(state);
   document.getElementById("settings-modal").classList.add("hidden");
   renderHeader();

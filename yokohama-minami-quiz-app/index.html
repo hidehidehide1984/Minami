@@ -28,6 +28,22 @@
     <section class="view active" id="view-home">
       <h1 class="greeting" id="greeting">こんにちは！</h1>
 
+      <div class="card readiness-card">
+        <div class="card-head">
+          <span>🎓 合格めやすメーター</span>
+          <span class="countdown" id="exam-countdown"></span>
+        </div>
+        <div class="readiness-main">
+          <div class="readiness-score"><span id="readiness-num">0</span><span class="readiness-unit">%</span></div>
+          <div class="readiness-info">
+            <div class="readiness-stage" id="readiness-stage">🌱 スタート</div>
+            <div class="bar"><div class="bar-fill readiness-fill" id="readiness-fill"></div></div>
+          </div>
+        </div>
+        <div class="readiness-advice" id="readiness-advice"></div>
+        <div class="readiness-note">※アプリの練習にもとづく <b>めやす</b> です（本番の合格率ではありません）。</div>
+      </div>
+
       <div class="card mission">
         <div class="mission-head">
           <span>🎯 今日のミッション</span>
@@ -88,6 +104,8 @@
         <div class="total-box"><div class="total-num" id="stat-correct">0</div><div class="total-lbl">正解</div></div>
         <div class="total-box"><div class="total-num" id="stat-rate">0%</div><div class="total-lbl">正答率</div></div>
       </div>
+      <h2 class="section-title">🎓 合格めやすの内わけ</h2>
+      <div class="cat-stats" id="readiness-breakdown"></div>
       <h2 class="section-title">分野ごとの正答率</h2>
       <div class="cat-stats" id="cat-stats"></div>
       <h2 class="section-title">📅 1日ごとの学習量（直近14日）</h2>
@@ -122,6 +140,9 @@
       </label>
       <label class="field">1日の目標問題数
         <input type="number" id="set-goal" min="1" max="50" />
+      </label>
+      <label class="field">受験日（カウントダウンに使います）
+        <input type="date" id="set-exam" />
       </label>
       <div class="modal-actions">
         <button class="ghost-btn" id="settings-cancel">とじる</button>
