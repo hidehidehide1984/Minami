@@ -8,6 +8,7 @@ let lastQId = null;     // 同じ問題が連続しないように
 let recentCats = [];    // 直近に出した分野（インターリーブ用、最大4件）
 let answered = false;   // 今の問題に答えたか
 let forcedCategory = null; // 「この分野だけ練習」モード（nullなら適応出題）
+let lastSubmitAt = 0;   // 直前に答え合わせした時刻（Enterの二重発火を防ぐ）
 
 /* ---------- 答えの正規化（全角→半角・空白除去など） ---------- */
 function normalize(str) {
@@ -220,7 +221,11 @@ function renderQuestion(q) {
     inp.placeholder = "答えを入力（数字や言葉）";
     inp.autocomplete = "off";
     inp.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !answered) submitAnswer(inp.value, null);
+      if (e.key === "Enter" && !answered) {
+        // 既定の動作を止め、このEnterが「つぎの問題」ボタンまで届かないようにする
+        e.preventDefault();
+        submitAnswer(inp.value, null);
+      }
     });
     ansArea.appendChild(inp);
     document.getElementById("submit-btn").classList.remove("hidden");
@@ -297,6 +302,7 @@ function submitAnswer(value, btnEl) {
     toast("🎯 今日の目標たっせい！えらい！");
   }
 
+  lastSubmitAt = Date.now();
   document.getElementById("next-btn").classList.remove("hidden");
   document.getElementById("next-btn").focus();
   renderHeader();
@@ -441,6 +447,9 @@ function init() {
     if (inp) submitAnswer(inp.value, null);
   };
   document.getElementById("next-btn").onclick = () => {
+    // 答え合わせ直後（同じEnterキーの押し下げ）で次に飛ばないようにする。
+    // 解説を読まずにスキップするのを防ぎ、もう一度Enter/クリックで次へ進める。
+    if (Date.now() - lastSubmitAt < 350) return;
     // 目標達成後はホームにもどるか聞かずに続ける（やめたいときは戻るボタン）
     nextQuestion();
   };
