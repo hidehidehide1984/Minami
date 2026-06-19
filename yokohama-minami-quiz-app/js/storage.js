@@ -38,6 +38,7 @@ function defaultState() {
     dailyGoal: 10,         // 1日の目標問題数
     todayCount: 0,         // 今日解いた数
     todayDate: "",         // todayCount を数えている日付
+    dailyCounts: {},       // 1日ごとに実施した問題数 { "2026-06-19": 12, ... }
   };
 }
 

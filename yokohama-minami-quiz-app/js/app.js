@@ -121,19 +121,23 @@ function renderBadgesPreview() {
   document.getElementById("badge-count").textContent = `${got} / ${Gamify.BADGES.length}`;
 }
 
-// ここ2週間のストリークをカレンダー風に表示
+// ここ2週間のストリークをカレンダー風に表示（その日の実施問題数つき）
 function renderStreakCalendar() {
   const wrap = document.getElementById("streak-cal");
   wrap.innerHTML = "";
-  const set = new Set(state.studyDates);
+  const counts = state.dailyCounts || {};
   for (let i = 13; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const key = Store.todayStr(d);
+    const n = counts[key] || 0;
     const cell = document.createElement("div");
-    cell.className = "cal-cell" + (set.has(key) ? " done" : "");
-    cell.title = key;
-    cell.textContent = d.getDate();
+    cell.className = "cal-cell" + (n > 0 ? " done" : "");
+    cell.title = n > 0 ? `${key}：${n}問` : `${key}：おやすみ`;
+    // 勉強した日はその日の問題数、していない日は日付を薄く表示
+    cell.innerHTML = n > 0
+      ? `<span class="cal-count">${n}</span><span class="cal-date">${d.getMonth() + 1}/${d.getDate()}</span>`
+      : `<span class="cal-date">${d.getMonth() + 1}/${d.getDate()}</span>`;
     wrap.appendChild(cell);
   }
 }
@@ -260,6 +264,9 @@ function submitAnswer(value, btnEl) {
 
   // 今日のカウント・ストリーク
   state.todayCount += 1;
+  // 1日ごとの実施問題数を記録（カレンダー・学習履歴で使う）
+  const todayKey = Store.todayStr();
+  state.dailyCounts[todayKey] = (state.dailyCounts[todayKey] || 0) + 1;
   const beforeStreak = state.streak;
   Gamify.updateStreak(state);
 
@@ -352,6 +359,8 @@ function renderStats() {
     wrap.appendChild(row);
   }
 
+  renderDailyHistory();
+
   // 全バッジ一覧
   const bwrap = document.getElementById("all-badges");
   bwrap.innerHTML = "";
@@ -361,6 +370,45 @@ function renderStats() {
     el.className = "badge-full" + (got ? " got" : "");
     el.innerHTML = `<span class="badge-emoji">${got ? b.emoji : "🔒"}</span><span class="badge-name">${b.name}</span><span class="badge-desc">${b.desc}</span>`;
     bwrap.appendChild(el);
+  });
+}
+
+// 1日ごとの実施問題数（直近14日）を棒グラフで表示
+function renderDailyHistory() {
+  const wrap = document.getElementById("daily-history");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  const counts = state.dailyCounts || {};
+
+  // 直近14日分の {日付, 問題数} を新しい順でならべる
+  const days = [];
+  for (let i = 0; i < 14; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = Store.todayStr(d);
+    days.push({ d, key, n: counts[key] || 0 });
+  }
+  const max = Math.max(state.dailyGoal, ...days.map((x) => x.n), 1);
+  const today = Store.todayStr();
+  const weekday = ["日", "月", "火", "水", "木", "金", "土"];
+
+  // 直近14日の合計・1日あたりの平均
+  const sum = days.reduce((a, x) => a + x.n, 0);
+  const studied = days.filter((x) => x.n > 0).length;
+  document.getElementById("history-summary").textContent =
+    `この2週間で ${sum}問（勉強した日 ${studied}日）`;
+
+  days.forEach((x) => {
+    const reached = x.n >= state.dailyGoal && state.dailyGoal > 0;
+    const row = document.createElement("div");
+    row.className = "hist-row";
+    const label = (x.key === today ? "今日" : `${x.d.getMonth() + 1}/${x.d.getDate()}`) +
+      `（${weekday[x.d.getDay()]}）`;
+    row.innerHTML =
+      `<div class="hist-date">${label}</div>` +
+      `<div class="bar"><div class="bar-fill hist-fill${reached ? " reached" : ""}" style="width:${Math.round(x.n / max * 100)}%"></div></div>` +
+      `<div class="hist-num">${x.n > 0 ? x.n + "問" : "—"}${reached ? " 🎯" : ""}</div>`;
+    wrap.appendChild(row);
   });
 }
 
