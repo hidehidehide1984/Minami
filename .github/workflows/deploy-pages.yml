@@ -1,0 +1,47 @@
+name: Deploy to GitHub Pages
+
+# yokohama-minami-quiz-app を GitHub Pages で公開するワークフロー。
+# 「Settings > Pages > Source」を GitHub Actions にしておけば、
+# 対象ブランチへ push するたびに自動でデプロイされます。
+
+on:
+  push:
+    branches:
+      - claude/yokohamaminami-materials-review-4h3g00
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時実行は1つに絞り、進行中のデプロイはキャンセルしない
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          # Pages がまだ有効でなければ自動で有効化する
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # アプリのフォルダをサイトのルートとして公開する
+          path: yokohama-minami-quiz-app
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>南中チャレンジ｜横浜南附属中 適性検査 1問1答</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- ヘッダー -->
+  <header class="app-header">
+    <div class="brand">
+      <span class="logo">🦉</span>
+      <span class="brand-name">南中チャレンジ</span>
+    </div>
+    <div class="header-stats">
+      <span class="chip" id="hdr-level">Lv.1</span>
+      <span class="chip" id="hdr-streak">🔥0</span>
+      <span class="chip" id="hdr-coin">🪙0</span>
+      <button class="icon-btn" id="settings-btn" title="設定">⚙️</button>
+    </div>
+  </header>
+  <div class="xp-bar"><div class="xp-fill" id="xp-fill"></div></div>
+  <div class="xp-text" id="xp-text"></div>
+
+  <main>
+    <!-- ===== ホーム ===== -->
+    <section class="view active" id="view-home">
+      <h1 class="greeting" id="greeting">こんにちは！</h1>
+
+      <div class="card mission">
+        <div class="mission-head">
+          <span>🎯 今日のミッション</span>
+          <span id="daily-progress">0 / 10 問</span>
+        </div>
+        <div class="bar"><div class="bar-fill mission-fill" id="daily-fill"></div></div>
+        <div class="mission-msg" id="daily-msg"></div>
+      </div>
+
+      <button class="big-btn" id="start-today">▶ 今日の問題をはじめる</button>
+      <p class="advice" id="advice"></p>
+
+      <h2 class="section-title">分野をえらんで練習</h2>
+      <div class="cat-buttons" id="cat-buttons"></div>
+
+      <div class="card">
+        <div class="card-head">
+          <span>🏅 バッジ</span>
+          <span id="badge-count">0 / 0</span>
+        </div>
+        <div class="badge-preview" id="badge-preview"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span>📅 この2週間のがんばり</span></div>
+        <div class="streak-cal" id="streak-cal"></div>
+      </div>
+
+      <button class="link-btn" id="nav-stats">📊 くわしいせいせきを見る</button>
+    </section>
+
+    <!-- ===== クイズ ===== -->
+    <section class="view" id="view-quiz">
+      <button class="back-link" id="quit-quiz">← ホームにもどる</button>
+      <div class="card quiz-card">
+        <div class="q-meta">
+          <span class="q-category" id="q-category"></span>
+          <span class="q-level" id="q-level"></span>
+        </div>
+        <p class="q-text" id="q-text"></p>
+        <div id="answer-area"></div>
+        <div class="hint-box hidden" id="hint-box"></div>
+        <div class="quiz-actions">
+          <button class="ghost-btn" id="hint-btn">💡 ヒント</button>
+          <button class="primary-btn hidden" id="submit-btn">こたえる</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <button class="primary-btn next-btn hidden" id="next-btn">つぎの問題 ▶</button>
+      </div>
+    </section>
+
+    <!-- ===== せいせき ===== -->
+    <section class="view" id="view-stats">
+      <button class="back-link" id="stats-back">← ホームにもどる</button>
+      <h1 class="page-title">📊 せいせき</h1>
+      <div class="totals">
+        <div class="total-box"><div class="total-num" id="stat-total">0</div><div class="total-lbl">といた数</div></div>
+        <div class="total-box"><div class="total-num" id="stat-correct">0</div><div class="total-lbl">正解</div></div>
+        <div class="total-box"><div class="total-num" id="stat-rate">0%</div><div class="total-lbl">正答率</div></div>
+      </div>
+      <h2 class="section-title">分野ごとの正答率</h2>
+      <div class="cat-stats" id="cat-stats"></div>
+      <h2 class="section-title">バッジ一覧</h2>
+      <div class="all-badges" id="all-badges"></div>
+    </section>
+  </main>
+
+  <!-- フッターナビ -->
+  <nav class="bottom-nav">
+    <button id="nav-home">🏠<span>ホーム</span></button>
+    <button id="nav-stats">📊<span>せいせき</span></button>
+  </nav>
+
+  <!-- バッジ獲得モーダル -->
+  <div class="modal hidden" id="badge-modal">
+    <div class="modal-card">
+      <h2>🎉 新しいバッジ！</h2>
+      <div id="badge-modal-body"></div>
+      <button class="primary-btn" id="badge-modal-close">やったー！</button>
+    </div>
+  </div>
+
+  <!-- 設定モーダル -->
+  <div class="modal hidden" id="settings-modal">
+    <div class="modal-card">
+      <h2>⚙️ せってい</h2>
+      <label class="field">なまえ
+        <input type="text" id="set-name" maxlength="12" placeholder="ニックネーム" />
+      </label>
+      <label class="field">1日の目標問題数
+        <input type="number" id="set-goal" min="1" max="50" />
+      </label>
+      <div class="modal-actions">
+        <button class="ghost-btn" id="settings-cancel">とじる</button>
+        <button class="primary-btn" id="settings-save">ほぞん</button>
+      </div>
+      <button class="danger-link" id="settings-reset">データをリセット</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- スクリプト（順番に読みこむ：file:// でも動くように module は使わない） -->
+  <script src="js/questions.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/gamify.js"></script>
+  <script src="js/adaptive.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
