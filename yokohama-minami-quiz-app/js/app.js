@@ -269,9 +269,10 @@ function submitAnswer(value, btnEl) {
 
   // 今日のカウント・ストリーク
   state.todayCount += 1;
-  // 1日ごとの実施問題数を記録（カレンダー・学習履歴で使う）
+  // 1日ごとの実施問題数・正答数を記録（カレンダー・学習履歴で使う）
   const todayKey = Store.todayStr();
   state.dailyCounts[todayKey] = (state.dailyCounts[todayKey] || 0) + 1;
+  if (correct) state.dailyCorrect[todayKey] = (state.dailyCorrect[todayKey] || 0) + 1;
   const beforeStreak = state.streak;
   Gamify.updateStreak(state);
 
@@ -385,35 +386,41 @@ function renderDailyHistory() {
   if (!wrap) return;
   wrap.innerHTML = "";
   const counts = state.dailyCounts || {};
+  const corrects = state.dailyCorrect || {};
 
-  // 直近14日分の {日付, 問題数} を新しい順でならべる
+  // 直近14日分の {日付, 問題数, 正答数} を新しい順でならべる
   const days = [];
   for (let i = 0; i < 14; i++) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const key = Store.todayStr(d);
-    days.push({ d, key, n: counts[key] || 0 });
+    days.push({ d, key, n: counts[key] || 0, c: corrects[key] || 0 });
   }
   const max = Math.max(state.dailyGoal, ...days.map((x) => x.n), 1);
   const today = Store.todayStr();
   const weekday = ["日", "月", "火", "水", "木", "金", "土"];
 
-  // 直近14日の合計・1日あたりの平均
+  // 直近14日の合計（実施数・正答数）と勉強した日数
   const sum = days.reduce((a, x) => a + x.n, 0);
+  const sumC = days.reduce((a, x) => a + x.c, 0);
   const studied = days.filter((x) => x.n > 0).length;
   document.getElementById("history-summary").textContent =
-    `この2週間で ${sum}問（勉強した日 ${studied}日）`;
+    `この2週間で ${sum}問中 ${sumC}問 正解（勉強した日 ${studied}日）`;
 
   days.forEach((x) => {
     const reached = x.n >= state.dailyGoal && state.dailyGoal > 0;
+    // バー全体＝実施数、その中の濃い部分＝正答数
+    const barW = Math.round(x.n / max * 100);
+    const correctW = x.n > 0 ? Math.round(x.c / x.n * 100) : 0;
     const row = document.createElement("div");
     row.className = "hist-row";
     const label = (x.key === today ? "今日" : `${x.d.getMonth() + 1}/${x.d.getDate()}`) +
       `（${weekday[x.d.getDay()]}）`;
     row.innerHTML =
       `<div class="hist-date">${label}</div>` +
-      `<div class="bar"><div class="bar-fill hist-fill${reached ? " reached" : ""}" style="width:${Math.round(x.n / max * 100)}%"></div></div>` +
-      `<div class="hist-num">${x.n > 0 ? x.n + "問" : "—"}${reached ? " 🎯" : ""}</div>`;
+      `<div class="bar"><div class="bar-fill hist-fill${reached ? " reached" : ""}" style="width:${barW}%">` +
+        `<div class="hist-correct" style="width:${correctW}%"></div></div></div>` +
+      `<div class="hist-num">${x.n > 0 ? `${x.c}/${x.n}問` : "—"}${reached ? " 🎯" : ""}</div>`;
     wrap.appendChild(row);
   });
 }

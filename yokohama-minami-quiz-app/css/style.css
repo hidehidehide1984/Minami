@@ -188,9 +188,10 @@ main { max-width: 620px; margin: 0 auto; padding: 16px; }
 .hist-row { display: flex; align-items: center; gap: 10px; }
 .hist-date { width: 78px; font-size: 12px; font-weight: 700; color: var(--muted); }
 .hist-row .bar { flex: 1; }
-.hist-fill { background: linear-gradient(90deg,#4895ef,#4361ee); }
-.hist-fill.reached { background: linear-gradient(90deg,#06d6a0,#1b9aaa); }
-.hist-num { width: 58px; text-align: right; font-size: 12px; font-weight: 700; color: var(--ink); }
+.hist-fill { background: #d3def7; }            /* バー全体＝その日の実施数 */
+.hist-fill.reached { background: #c7e9f1; }    /* 目標達成日 */
+.hist-correct { height: 100%; border-radius: 999px; background: linear-gradient(90deg,#06d6a0,#1b9aaa); } /* 濃い部分＝正答数 */
+.hist-num { width: 64px; text-align: right; font-size: 12px; font-weight: 700; color: var(--ink); }
 
 .all-badges { display: grid; gap: 8px; }
 .badge-full {
