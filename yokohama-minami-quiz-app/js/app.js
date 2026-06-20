@@ -477,7 +477,12 @@ function renderReadinessBreakdown() {
 function openSettings() {
   document.getElementById("set-name").value = state.name || "";
   document.getElementById("set-goal").value = state.dailyGoal;
-  document.getElementById("set-exam").value = state.examDate || "";
+  const examNote = document.getElementById("exam-note");
+  if (examNote && state.examDate) {
+    const [y, m, d] = state.examDate.split("-");
+    const days = Store.daysBetween(Store.todayStr(), state.examDate);
+    examNote.textContent = `🎯 受験日：${y}年${+m}月${+d}日` + (days > 0 ? `（あと${days}日）` : "");
+  }
   document.getElementById("settings-modal").classList.remove("hidden");
 }
 function saveSettings() {
@@ -486,7 +491,6 @@ function saveSettings() {
   if (isNaN(g) || g < 1) g = 5;
   if (g > 50) g = 50;
   state.dailyGoal = g;
-  state.examDate = document.getElementById("set-exam").value || "";
   Store.saveState(state);
   document.getElementById("settings-modal").classList.add("hidden");
   renderHeader();

@@ -243,6 +243,7 @@ main { max-width: 620px; margin: 0 auto; padding: 16px; }
 .got-name { font-weight: 800; font-size: 18px; }
 .got-desc { font-size: 13px; color: var(--muted); }
 .field { display: block; text-align: left; font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 14px; }
+.exam-note { text-align: left; font-size: 13px; font-weight: 700; color: var(--primary); margin: 0 0 14px; }
 .field input {
   display: block; width: 100%; margin-top: 6px; padding: 12px;
   border: 2px solid #d4dbf0; border-radius: 10px; font-size: 16px;
