@@ -10,6 +10,10 @@ let answered = false;   // 今の問題に答えたか
 let forcedCategory = null; // 「この分野だけ練習」モード（nullなら適応出題）
 let lastSubmitAt = 0;   // 直前に答え合わせした時刻（Enterの二重発火を防ぐ）
 let currentChallenge = null; // いま取り組んでいる適性検査チャレンジ
+let challengeInSession = false; // 「今日の問題」の中でチャレンジを出しているか
+let lastChallengeId = null;  // 直前に出したチャレンジ（連続を避ける）
+let inTodaySession = false;  // 「今日の問題」（適応出題）モード中か
+let sinceChallenge = 0;      // チャレンジを出してからの通常問題の数
 
 /* ---------- 答えの正規化（全角→半角・空白除去など） ---------- */
 function normalize(str) {
@@ -177,8 +181,21 @@ function renderStreakCalendar() {
 /* ---------- クイズ ---------- */
 function startQuiz(categoryId) {
   forcedCategory = categoryId || null;
+  inTodaySession = !forcedCategory;     // 「今日の問題」のときだけチャレンジを混ぜる
+  if (inTodaySession) sinceChallenge = 0;
   nextQuestion();
   showView("view-quiz");
+}
+
+// 何問かに1回、適性検査チャレンジをはさむ（今日の問題のみ）
+const CHALLENGE_EVERY = 6;
+function pickChallenge() {
+  const all = window.CHALLENGES || [];
+  if (!all.length) return null;
+  const notDone = all.filter((c) => !(state.challengeDone && state.challengeDone[c.id]) && c.id !== lastChallengeId);
+  let pool = notDone.length ? notDone : all.filter((c) => c.id !== lastChallengeId);
+  if (!pool.length) pool = all;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function nextQuestion() {
@@ -190,6 +207,12 @@ function nextQuestion() {
     const list = pool.length ? pool : QUESTIONS.filter((x) => x.category === forcedCategory);
     q = chooseFromPool(list);
   } else {
+    // 今日の問題：ときどき適性検査チャレンジ（記述）をはさむ
+    if (inTodaySession && sinceChallenge >= CHALLENGE_EVERY) {
+      const ch = pickChallenge();
+      if (ch) { sinceChallenge = 0; openChallenge(ch.id, true); return; }
+    }
+    sinceChallenge += 1;
     q = Adaptive.pickNextQuestion(state, { avoidId: lastQId, recentCats });
   }
   currentQ = q;
@@ -505,10 +528,13 @@ function renderChallengeList() {
   updateChallengeProgress();
 }
 
-function openChallenge(id) {
+function openChallenge(id, inSession) {
   const ch = (window.CHALLENGES || []).find((c) => c.id === id);
   if (!ch) return;
   currentChallenge = ch;
+  challengeInSession = !!inSession;
+  // 今日の問題の途中なら、戻る先は「一覧」ではなくクイズに合わせて案内を変える
+  document.getElementById("ch-back").textContent = challengeInSession ? "← 今日の問題にもどる" : "← 一覧にもどる";
   document.getElementById("ch-kind").textContent = `適性検査${ch.kind}`;
   document.getElementById("ch-title").textContent = ch.title;
 
@@ -587,10 +613,18 @@ function gradeChallenge(done) {
   if (newBadges.length) showBadgePopup(newBadges);
   if (state.streak > beforeStreak && state.streak >= 2) toast(`🔥 ${state.streak}日れんぞく達成！`);
   toast(done ? "よく書けたね！記録したよ ✍️" : "もう一度ちょうせんしてみよう！");
-
   renderHeader();
-  renderChallengeList();
-  showView("view-challenge-list");
+
+  if (challengeInSession) {
+    // 「今日の問題」の途中だったので、続けて次の問題へ
+    challengeInSession = false;
+    lastChallengeId = ch.id;
+    nextQuestion();
+    showView("view-quiz");
+  } else {
+    renderChallengeList();
+    showView("view-challenge-list");
+  }
   window.scrollTo(0, 0);
 }
 
@@ -641,7 +675,17 @@ function init() {
   // 適性検査チャレンジ
   document.getElementById("open-challenges").onclick = () => { renderChallengeList(); showView("view-challenge-list"); };
   document.getElementById("cl-back").onclick = () => { renderHome(); renderHeader(); showView("view-home"); };
-  document.getElementById("ch-back").onclick = () => { renderChallengeList(); showView("view-challenge-list"); };
+  document.getElementById("ch-back").onclick = () => {
+    if (challengeInSession) {
+      // チャレンジをとばして今日の問題を続ける
+      challengeInSession = false;
+      nextQuestion();
+      showView("view-quiz");
+    } else {
+      renderChallengeList();
+      showView("view-challenge-list");
+    }
+  };
   document.getElementById("ch-reveal-btn").onclick = revealChallengeAnswer;
   document.getElementById("ch-hint-btn").onclick = showChallengeHint;
 
