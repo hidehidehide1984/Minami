@@ -126,6 +126,47 @@ main { max-width: 620px; margin: 0 auto; padding: 16px; }
   font-weight: 700; font-size: 15px; padding: 10px; margin-top: 4px;
 }
 
+/* ===== 適性検査チャレンジ ===== */
+.big-btn.alt { background: linear-gradient(135deg,#7c5cff,#4361ee); box-shadow: 0 6px 16px rgba(67,97,238,.32); font-size: 17px; margin-top: 4px; }
+.challenge-entry { background: linear-gradient(135deg,#fff,#f1edff); border: 1px solid #e4ddfb; }
+.challenge-desc { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+#challenge-progress { font-size: 13px; font-weight: 800; color: #7c5cff; }
+
+.challenge-cards { display: grid; gap: 10px; }
+.ch-card {
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  background: var(--card); border: 2px solid #e3e8f5; border-radius: 14px;
+  padding: 14px; font-weight: 700; font-size: 15px; box-shadow: var(--shadow); color: var(--ink);
+}
+.ch-card.done { border-color: #bce8cd; background: #f3fbf6; }
+.ch-kindtag { color: #fff; font-size: 12px; font-weight: 800; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.kind-1 { background: #8e7cff; }
+.kind-2 { background: #2d9cdb; }
+.ch-cardtitle { flex: 1; }
+.ch-cardmark { font-size: 18px; color: var(--muted); }
+
+.ch-passage { background: #f7f9ff; border-left: 4px solid #c5d0f5; border-radius: 8px;
+  padding: 12px 14px; font-size: 15px; line-height: 1.9; white-space: pre-wrap; margin-bottom: 12px; }
+.ch-material { margin-bottom: 12px; overflow-x: auto; }
+.ch-table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.ch-table th, .ch-table td { border: 1px solid #d4dbf0; padding: 8px 10px; text-align: center; }
+.ch-table th { background: #eef1fa; }
+.ch-input {
+  width: 100%; font-size: 16px; padding: 12px; line-height: 1.8;
+  border: 2px solid #d4dbf0; border-radius: 12px; outline: none; resize: vertical; font-family: inherit;
+}
+.ch-input:focus { border-color: var(--primary); }
+
+.ch-answer { margin-top: 16px; border-top: 1px dashed #d4dbf0; padding-top: 14px; }
+.ch-ans-title { font-weight: 800; font-size: 15px; margin: 12px 0 6px; }
+.ch-model { background: #e7f7ee; border: 1px solid #bce8cd; border-radius: 10px;
+  padding: 12px; font-size: 14px; line-height: 1.9; white-space: pre-wrap; }
+.ch-points { margin: 4px 0 0; padding-left: 4px; list-style: none; }
+.ch-points li { margin: 8px 0; font-size: 14px; }
+.ch-points label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+.ch-points input { margin-top: 4px; }
+.ch-grade { display: flex; gap: 10px; margin-top: 16px; }
+
 /* ===== クイズ ===== */
 .back-link, .danger-link {
   background: none; border: none; color: var(--muted);

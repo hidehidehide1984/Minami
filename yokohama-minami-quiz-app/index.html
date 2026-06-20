@@ -56,6 +56,15 @@
       <button class="big-btn" id="start-today">▶ 今日の問題をはじめる</button>
       <p class="advice" id="advice"></p>
 
+      <div class="card challenge-entry">
+        <div class="card-head">
+          <span>📝 適性検査にチャレンジ</span>
+          <span id="challenge-progress"></span>
+        </div>
+        <p class="challenge-desc">本番に近い「長文・記述・資料」の問題。じっくり考えて、自分の言葉で書く練習だよ。</p>
+        <button class="big-btn alt" id="open-challenges">チャレンジをひらく ✍️</button>
+      </div>
+
       <h2 class="section-title">分野をえらんで練習</h2>
       <div class="cat-buttons" id="cat-buttons"></div>
 
@@ -114,6 +123,36 @@
       <h2 class="section-title">バッジ一覧</h2>
       <div class="all-badges" id="all-badges"></div>
     </section>
+
+    <!-- ===== 適性検査チャレンジ（一覧） ===== -->
+    <section class="view" id="view-challenge-list">
+      <button class="back-link" id="cl-back">← ホームにもどる</button>
+      <h1 class="page-title">📝 適性検査チャレンジ</h1>
+      <p class="advice">長文や資料を読んで、自分の言葉で書いてみよう。書けたら「模範解答」と「採点ポイント」で自分でまるつけ！</p>
+      <p class="readiness-note">※本番の出題形式に合わせたオリジナル問題です（過去問ではありません）。</p>
+      <div class="challenge-cards" id="challenge-cards"></div>
+    </section>
+
+    <!-- ===== 適性検査チャレンジ（解答） ===== -->
+    <section class="view" id="view-challenge">
+      <button class="back-link" id="ch-back">← 一覧にもどる</button>
+      <div class="card">
+        <div class="q-meta">
+          <span class="q-category" id="ch-kind"></span>
+          <span class="q-level" id="ch-title"></span>
+        </div>
+        <div class="ch-passage" id="ch-passage"></div>
+        <div class="ch-material" id="ch-material"></div>
+        <p class="q-text" id="ch-question"></p>
+        <textarea id="ch-input" class="ch-input" rows="6" placeholder="ここに答えを書こう（とちゅうでもOK）"></textarea>
+        <div class="hint-box hidden" id="ch-hint"></div>
+        <div class="quiz-actions">
+          <button class="ghost-btn" id="ch-hint-btn">💡 ヒント</button>
+          <button class="primary-btn" id="ch-reveal-btn">模範解答を見る</button>
+        </div>
+        <div class="ch-answer hidden" id="ch-answer"></div>
+      </div>
+    </section>
   </main>
 
   <!-- フッターナビ -->
@@ -154,6 +193,7 @@
 
   <!-- スクリプト（順番に読みこむ：file:// でも動くように module は使わない） -->
   <script src="js/questions.js"></script>
+  <script src="js/challenges.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/gamify.js"></script>
   <script src="js/adaptive.js"></script>

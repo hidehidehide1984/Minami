@@ -46,6 +46,7 @@ function defaultState() {
     dailyCounts: {},       // 1日ごとに実施した問題数 { "2026-06-19": 12, ... }
     dailyCorrect: {},      // 1日ごとに正解した数   { "2026-06-19": 9, ... }
     examDate: EXAM_DATE,   // 受験日（固定）。カウントダウンに使う
+    challengeDone: {},     // 適性検査チャレンジで「できた」にした問題 { id: true }
   };
 }
 

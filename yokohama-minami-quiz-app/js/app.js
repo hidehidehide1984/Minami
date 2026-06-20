@@ -9,6 +9,7 @@ let recentCats = [];    // 直近に出した分野（インターリーブ用�
 let answered = false;   // 今の問題に答えたか
 let forcedCategory = null; // 「この分野だけ練習」モード（nullなら適応出題）
 let lastSubmitAt = 0;   // 直前に答え合わせした時刻（Enterの二重発火を防ぐ）
+let currentChallenge = null; // いま取り組んでいる適性検査チャレンジ
 
 /* ---------- 答えの正規化（全角→半角・空白除去など） ---------- */
 function normalize(str) {
@@ -87,9 +88,18 @@ function renderHome() {
   }
 
   renderReadiness();
+  updateChallengeProgress();
   renderCategoryButtons();
   renderBadgesPreview();
   renderStreakCalendar();
+}
+
+function updateChallengeProgress() {
+  const el = document.getElementById("challenge-progress");
+  if (!el) return;
+  const total = (window.CHALLENGES || []).length;
+  const done = Object.keys(state.challengeDone || {}).length;
+  el.textContent = `✍️ ${done} / ${total} 問`;
 }
 
 // 合格めやすメーター＋受験日カウントダウン（ホーム）
@@ -473,6 +483,117 @@ function renderReadinessBreakdown() {
   });
 }
 
+/* ---------- 適性検査チャレンジ（長文・記述・自己採点） ---------- */
+function escapeHtml(s) {
+  return String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+
+function renderChallengeList() {
+  const wrap = document.getElementById("challenge-cards");
+  wrap.innerHTML = "";
+  (window.CHALLENGES || []).forEach((ch) => {
+    const done = !!(state.challengeDone && state.challengeDone[ch.id]);
+    const card = document.createElement("button");
+    card.className = "ch-card" + (done ? " done" : "");
+    card.innerHTML =
+      `<span class="ch-kindtag kind-${ch.kind === "Ⅰ" ? "1" : "2"}">適性${ch.kind}</span>` +
+      `<span class="ch-cardtitle">${escapeHtml(ch.title)}</span>` +
+      `<span class="ch-cardmark">${done ? "✅" : "›"}</span>`;
+    card.onclick = () => openChallenge(ch.id);
+    wrap.appendChild(card);
+  });
+  updateChallengeProgress();
+}
+
+function openChallenge(id) {
+  const ch = (window.CHALLENGES || []).find((c) => c.id === id);
+  if (!ch) return;
+  currentChallenge = ch;
+  document.getElementById("ch-kind").textContent = `適性検査${ch.kind}`;
+  document.getElementById("ch-title").textContent = ch.title;
+
+  const pa = document.getElementById("ch-passage");
+  pa.textContent = ch.passage || "";
+  pa.style.display = ch.passage ? "block" : "none";
+
+  const mat = document.getElementById("ch-material");
+  if (ch.material) { mat.innerHTML = ch.material; mat.style.display = "block"; }
+  else { mat.innerHTML = ""; mat.style.display = "none"; }
+
+  document.getElementById("ch-question").textContent = ch.question;
+  document.getElementById("ch-input").value = "";
+  document.getElementById("ch-hint").classList.add("hidden");
+  document.getElementById("ch-hint").textContent = "";
+  const ans = document.getElementById("ch-answer");
+  ans.classList.add("hidden");
+  ans.innerHTML = "";
+  document.getElementById("ch-reveal-btn").classList.remove("hidden");
+  showView("view-challenge");
+  window.scrollTo(0, 0);
+}
+
+function showChallengeHint() {
+  if (!currentChallenge) return;
+  const box = document.getElementById("ch-hint");
+  box.textContent = "💡 ヒント：" + (currentChallenge.hint || "問題と資料をもう一度よく読んでみよう。");
+  box.classList.remove("hidden");
+}
+
+function revealChallengeAnswer() {
+  const ch = currentChallenge;
+  if (!ch) return;
+  const ans = document.getElementById("ch-answer");
+  let html =
+    `<div class="ch-ans-title">📝 模範解答（例）</div>` +
+    `<div class="ch-model">${escapeHtml(ch.model)}</div>` +
+    `<div class="ch-ans-title">✅ 採点ポイント（できたものにチェック）</div><ul class="ch-points">`;
+  ch.points.forEach((p) => {
+    html += `<li><label><input type="checkbox" class="ch-pt"> ${escapeHtml(p)}</label></li>`;
+  });
+  html += `</ul>` +
+    `<div class="ch-grade">` +
+    `<button class="primary-btn" id="ch-done">できた！記録する ✍️</button>` +
+    `<button class="ghost-btn" id="ch-retry">もう一度</button></div>`;
+  ans.innerHTML = html;
+  ans.classList.remove("hidden");
+  document.getElementById("ch-reveal-btn").classList.add("hidden");
+  document.getElementById("ch-done").onclick = () => gradeChallenge(true);
+  document.getElementById("ch-retry").onclick = () => gradeChallenge(false);
+  ans.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function gradeChallenge(done) {
+  const ch = currentChallenge;
+  if (!ch) return;
+  const today = Store.todayStr();
+
+  // 学習の記録（チャレンジも1問として日々の記録に数える）
+  state.todayCount += 1;
+  state.dailyCounts[today] = (state.dailyCounts[today] || 0) + 1;
+  if (done) {
+    state.dailyCorrect[today] = (state.dailyCorrect[today] || 0) + 1;
+    state.challengeDone[ch.id] = true;
+    state.xp += 25;
+    state.coins += 3;
+  } else {
+    state.xp += 8; // ちょうせんしたXP
+  }
+
+  const beforeStreak = state.streak;
+  Gamify.updateStreak(state);
+  const newBadges = Gamify.checkNewBadges(state);
+  Store.saveState(state);
+
+  if (newBadges.length) showBadgePopup(newBadges);
+  if (state.streak > beforeStreak && state.streak >= 2) toast(`🔥 ${state.streak}日れんぞく達成！`);
+  toast(done ? "よく書けたね！記録したよ ✍️" : "もう一度ちょうせんしてみよう！");
+
+  renderHeader();
+  renderChallengeList();
+  showView("view-challenge-list");
+  window.scrollTo(0, 0);
+}
+
 /* ---------- 設定（名前・目標・リセット） ---------- */
 function openSettings() {
   document.getElementById("set-name").value = state.name || "";
@@ -516,6 +637,13 @@ function init() {
   };
   document.getElementById("hint-btn").onclick = showHint;
   document.getElementById("quit-quiz").onclick = () => { renderHome(); renderHeader(); showView("view-home"); };
+
+  // 適性検査チャレンジ
+  document.getElementById("open-challenges").onclick = () => { renderChallengeList(); showView("view-challenge-list"); };
+  document.getElementById("cl-back").onclick = () => { renderHome(); renderHeader(); showView("view-home"); };
+  document.getElementById("ch-back").onclick = () => { renderChallengeList(); showView("view-challenge-list"); };
+  document.getElementById("ch-reveal-btn").onclick = revealChallengeAnswer;
+  document.getElementById("ch-hint-btn").onclick = showChallengeHint;
 
   document.getElementById("nav-home").onclick = () => { renderHome(); renderHeader(); showView("view-home"); };
   document.getElementById("nav-stats").onclick = () => { renderStats(); showView("view-stats"); };
