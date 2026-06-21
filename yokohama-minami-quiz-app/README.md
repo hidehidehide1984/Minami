@@ -76,7 +76,7 @@ yokohama-minami-quiz-app/
 ├── index.html         画面の骨組み
 ├── css/style.css      見た目（スマホ最適化）
 └── js/
-    ├── questions.js   問題バンク（194問・8分野・3難易度）
+    ├── questions.js   問題バンク（194問・8分野・3難易度・すべて4択）
     ├── challenges.js  適性検査チャレンジ（本番型の長文・記述・資料問題）
     ├── storage.js     学習データの保存（localStorage）
     ├── gamify.js      レベル・ストリーク・バッジ・合格めやす
@@ -95,14 +95,16 @@ yokohama-minami-quiz-app/
 ## 問題の増やし方
 
 `js/questions.js` の `QUESTIONS` 配列に追記するだけです。
+小学生がキーボード入力しなくてよいよう、**すべて4択（`type: "choice"`）**にしています。
 
 ```js
-{ id: "kazu09", category: "kazu", level: 2, type: "input",
-  q: "問題文…", answer: "正解", accept: ["別の言い方"],
+{ id: "kazu25", category: "kazu", level: 2, type: "choice",
+  q: "問題文…", choices: ["正解", "ダミー1", "ダミー2", "ダミー3"], answer: "正解",
   hint: "ヒント", exp: "かいせつ" },
 ```
 
-選択式なら `type: "choice"` にして `choices: [...]`、`answer` は正解の選択肢の文字列にします。
+`answer` は `choices` の中の正解の文字列と一致させます。記述（作文）の練習は
+`js/challenges.js` の「適性検査チャレンジ」で行います。
 
 ---
 
