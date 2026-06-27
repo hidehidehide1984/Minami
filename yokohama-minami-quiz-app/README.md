@@ -76,7 +76,7 @@ yokohama-minami-quiz-app/
 ├── index.html         画面の骨組み
 ├── css/style.css      見た目（スマホ最適化）
 └── js/
-    ├── questions.js   問題バンク（194問・8分野・3難易度・すべて4択）
+    ├── questions.js   問題バンク（約1940問・8分野・3難易度・すべて4択）
     ├── challenges.js  適性検査チャレンジ（本番型の長文・記述・資料問題）
     ├── storage.js     学習データの保存（localStorage）
     ├── gamify.js      レベル・ストリーク・バッジ・合格めやす
