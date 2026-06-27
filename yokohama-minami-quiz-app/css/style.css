@@ -247,6 +247,11 @@ main { max-width: 620px; margin: 0 auto; padding: 16px; }
 .hist-correct { height: 100%; border-radius: 999px; background: linear-gradient(90deg,#06d6a0,#1b9aaa); } /* 濃い部分＝正答数 */
 .hist-num { width: 64px; text-align: right; font-size: 12px; font-weight: 700; color: var(--ink); }
 
+/* 保護者向けカード */
+.parent-card { background: linear-gradient(135deg,#fff,#fff6ef); border: 1px solid #f3e2d2; }
+.parent-points { margin: 0; padding-left: 18px; }
+.parent-points li { font-size: 13px; line-height: 1.8; color: #4a4d63; margin: 4px 0; }
+
 .all-badges { display: grid; gap: 8px; }
 .badge-full {
   display: flex; align-items: center; gap: 10px;

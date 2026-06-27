@@ -344,7 +344,9 @@ function submitAnswer(value, btnEl) {
     html += `<div class="fb-title">${cheers[Math.floor(Math.random() * cheers.length)]}</div>`;
     html += `<div class="fb-xp">+${gained} XP　🪙+${currentQ.level}</div>`;
   } else {
-    html += `<div class="fb-title">おしい！正解は <b>${currentQ.answer}</b></div>`;
+    const tries = ["ナイス挑戦！🔥", "おしい！ここで差がつくよ💡", "まちがいは宝物！💎", "次に出たら解けたらすごい！⭐"];
+    html += `<div class="fb-title">${tries[Math.floor(Math.random() * tries.length)]} 正解は <b>${currentQ.answer}</b></div>`;
+    html += `<div class="fb-xp">＋2 XP　📌 復習リストに入れたよ</div>`;
   }
   html += `<div class="fb-exp"><b>かいせつ：</b>${currentQ.exp}</div>`;
   feedback.innerHTML = html;
@@ -405,6 +407,7 @@ function renderStats() {
   document.getElementById("stat-rate").textContent = rate + "%";
 
   renderReadinessBreakdown();
+  renderParentNote();
 
   const wrap = document.getElementById("cat-stats");
   wrap.innerHTML = "";
@@ -434,6 +437,31 @@ function renderStats() {
     el.innerHTML = `<span class="badge-emoji">${got ? b.emoji : "🔒"}</span><span class="badge-name">${b.name}</span><span class="badge-desc">${b.desc}</span>`;
     bwrap.appendChild(el);
   });
+}
+
+// 保護者向けの「褒めポイント」（既存データから自動で文章化）
+function renderParentNote() {
+  const wrap = document.getElementById("parent-points");
+  if (!wrap) return;
+  const pts = [];
+  // 直近7日の学習日数
+  const counts = state.dailyCounts || {};
+  let days7 = 0;
+  for (let i = 0; i < 7; i++) { const d = new Date(); d.setDate(d.getDate() - i); if ((counts[Store.todayStr(d)] || 0) > 0) days7++; }
+  if (days7 > 0) pts.push(`今週は <b>${days7}日</b> 学習できました${days7 >= 4 ? "（よく続いています！）" : ""}。`);
+  if (state.streak >= 2) pts.push(`連続 <b>${state.streak}日</b> 継続中。正解数よりも、続けていることをほめてあげてください。`);
+  // 得意・伸ばしどころの分野
+  let best = null, bestAcc = -1, worst = null, worstAcc = 2;
+  for (const id in CATEGORIES) {
+    const c = state.cat[id]; if (!c || c.seen < 5) continue;
+    const acc = c.correct / c.seen;
+    if (acc > bestAcc) { bestAcc = acc; best = id; }
+    if (acc < worstAcc) { worstAcc = acc; worst = id; }
+  }
+  if (best) pts.push(`<b>${CATEGORIES[best].name}</b> の正答率が高めです（${Math.round(bestAcc * 100)}%）。`);
+  if (worst && worst !== best) pts.push(`<b>${CATEGORIES[worst].name}</b> をもう少し練習するとバランスが良くなります。`);
+  if (pts.length === 0) pts.push("まずは毎日少しずつ。1問でも取り組めたら、ぜひほめてあげてください。");
+  wrap.innerHTML = pts.map((p) => `<li>${p}</li>`).join("");
 }
 
 // 1日ごとの実施問題数（直近14日）を棒グラフで表示
@@ -568,6 +596,13 @@ function showChallengeHint() {
 function revealChallengeAnswer() {
   const ch = currentChallenge;
   if (!ch) return;
+  // まずは自分で書いてみる（空欄のまま答えを見て達成記録するのを防ぐ）
+  const written = document.getElementById("ch-input").value.trim();
+  if (written.length < 6) {
+    toast("まずは1文だけでも書いてみよう！✍️");
+    document.getElementById("ch-input").focus();
+    return;
+  }
   const ans = document.getElementById("ch-answer");
   let html =
     `<div class="ch-ans-title">📝 模範解答（例）</div>` +
@@ -594,13 +629,19 @@ function gradeChallenge(done) {
   const today = Store.todayStr();
 
   // 学習の記録（チャレンジも1問として日々の記録に数える）
+  const alreadyDone = !!state.challengeDone[ch.id];
   state.todayCount += 1;
   state.dailyCounts[today] = (state.dailyCounts[today] || 0) + 1;
   if (done) {
-    state.dailyCorrect[today] = (state.dailyCorrect[today] || 0) + 1;
-    state.challengeDone[ch.id] = true;
-    state.xp += 25;
-    state.coins += 3;
+    if (!alreadyDone) {
+      // 初回完了だけ通常報酬＋日別正解にカウント
+      state.dailyCorrect[today] = (state.dailyCorrect[today] || 0) + 1;
+      state.challengeDone[ch.id] = true;
+      state.xp += 25;
+      state.coins += 3;
+    } else {
+      state.xp += 5; // 復習XPだけ（くり返しで報酬を稼げないように）
+    }
   } else {
     state.xp += 8; // ちょうせんしたXP
   }
@@ -612,7 +653,7 @@ function gradeChallenge(done) {
 
   if (newBadges.length) showBadgePopup(newBadges);
   if (state.streak > beforeStreak && state.streak >= 2) toast(`🔥 ${state.streak}日れんぞく達成！`);
-  toast(done ? "よく書けたね！記録したよ ✍️" : "もう一度ちょうせんしてみよう！");
+  toast(done ? (alreadyDone ? "復習できたね！＋5XP ✍️" : "よく書けたね！記録したよ ✍️") : "もう一度ちょうせんしてみよう！");
   renderHeader();
 
   if (challengeInSession) {
@@ -690,7 +731,9 @@ function init() {
   document.getElementById("ch-hint-btn").onclick = showChallengeHint;
 
   document.getElementById("nav-home").onclick = () => { renderHome(); renderHeader(); showView("view-home"); };
-  document.getElementById("nav-stats").onclick = () => { renderStats(); showView("view-stats"); };
+  const openStats = () => { renderStats(); showView("view-stats"); };
+  document.getElementById("nav-stats").onclick = openStats;        // 下部ナビ
+  document.getElementById("home-stats-link").onclick = openStats;  // ホーム内リンク
   document.getElementById("stats-back").onclick = () => { renderHome(); showView("view-home"); };
 
   document.getElementById("badge-modal-close").onclick = () =>

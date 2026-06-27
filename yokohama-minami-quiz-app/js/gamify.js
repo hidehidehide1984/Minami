@@ -46,6 +46,8 @@ const BADGES = [
   { id: "level5",   name: "レベル5",       emoji: "🚀", desc: "レベル5に到達",            check: (s) => levelFromXp(s.xp) >= 5 },
   { id: "explorer", name: "ぜんぶ体験",     emoji: "🧭", desc: "8つの分野すべてに挑戦",     check: (s) => Object.keys(CATEGORIES).every((id) => s.cat[id] && s.cat[id].seen > 0) },
   { id: "writer",   name: "記述デビュー",   emoji: "✍️", desc: "適性検査チャレンジに初挑戦",   check: (s) => Object.keys(s.challengeDone || {}).length >= 1 },
+  { id: "today3",   name: "今日3問",       emoji: "🌼", desc: "1日に3問ちょうせん",         check: (s) => s.todayCount >= 3 },
+  { id: "writer3",  name: "記述3問",       emoji: "📝", desc: "記述チャレンジを3問やりとげた", check: (s) => Object.keys(s.challengeDone || {}).length >= 3 },
 ];
 
 // 取得していないバッジで、条件を満たしたものを返す（新しく取れたバッジ）
