@@ -91,6 +91,13 @@ main { max-width: 620px; margin: 0 auto; padding: 16px; }
 .big-btn:active { transform: scale(.98); }
 .advice { text-align: center; color: var(--muted); font-size: 13px; margin: 10px 6px 4px; }
 
+/* リベンジボタン（まちがえた問題だけ復習） */
+.big-btn.revenge {
+  background: linear-gradient(135deg,#e05656,#c0392b);
+  box-shadow: 0 6px 16px rgba(224,86,86,.32);
+  font-size: 16px; margin-top: 10px;
+}
+
 .cat-buttons { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
 .cat-chip {
   display: flex; align-items: center; gap: 8px;
@@ -151,6 +158,15 @@ main { max-width: 620px; margin: 0 auto; padding: 16px; }
 .ch-table { border-collapse: collapse; width: 100%; font-size: 14px; }
 .ch-table th, .ch-table td { border: 1px solid #d4dbf0; padding: 8px 10px; text-align: center; }
 .ch-table th { background: #eef1fa; }
+/* 文型テンプレート（書き出しのヒント） */
+.tpl-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+.tpl-label { width: 100%; font-size: 12px; font-weight: 700; color: var(--muted); }
+.tpl-chip {
+  background: #eef1fa; border: 1px solid #d4dbf0; color: var(--primary);
+  border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700;
+}
+.tpl-chip:active { background: #dde4f8; }
+
 .ch-input {
   width: 100%; font-size: 16px; padding: 12px; line-height: 1.8;
   border: 2px solid #d4dbf0; border-radius: 12px; outline: none; resize: vertical; font-family: inherit;
@@ -295,6 +311,9 @@ main { max-width: 620px; margin: 0 auto; padding: 16px; }
   border: 2px solid #d4dbf0; border-radius: 10px; font-size: 16px;
 }
 .modal-actions { display: flex; gap: 10px; margin-top: 6px; }
+.goal-msg { font-size: 14px; color: var(--muted); margin: 0 0 14px; }
+#goal-modal .primary-btn { width: 100%; margin-bottom: 10px; }
+#goal-modal .ghost-btn { flex: 1; }
 .danger-link { width: 100%; color: var(--ng); margin-top: 14px; }
 
 /* ===== トースト ===== */

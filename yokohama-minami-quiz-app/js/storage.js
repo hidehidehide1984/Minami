@@ -47,6 +47,8 @@ function defaultState() {
     dailyCorrect: {},      // 1日ごとに正解した数   { "2026-06-19": 9, ... }
     examDate: EXAM_DATE,   // 受験日（固定）。カウントダウンに使う
     challengeDone: {},     // 適性検査チャレンジで「できた」にした問題 { id: true }
+    charmUsedMonth: "",    // ストリークおまもりを使った月（"2026-06"。月1回まで）
+    comeback: false,       // お休みのあと戻ってきたことがある（おかえりバッジ用）
   };
 }
 

@@ -14,6 +14,9 @@ let challengeInSession = false; // 「今日の問題」の中でチャレンジ
 let lastChallengeId = null;  // 直前に出したチャレンジ（連続を避ける）
 let inTodaySession = false;  // 「今日の問題」（適応出題）モード中か
 let sinceChallenge = 0;      // チャレンジを出してからの通常問題の数
+let revengeMode = false;     // 「まちがえた問題だけ復習（リベンジ）」モード中か
+let goalPending = false;     // 目標達成モーダルを次の「つぎの問題」で出すか
+let extraLeft = -1;          // 「あと3問だけ」の残り問題数（-1=無効）
 
 /* ---------- 答えの正規化（全角→半角・空白除去など） ---------- */
 function normalize(str) {
@@ -93,6 +96,7 @@ function renderHome() {
 
   renderReadiness();
   updateChallengeProgress();
+  renderRevengeButton();
   renderCategoryButtons();
   renderBadgesPreview();
   renderStreakCalendar();
@@ -181,8 +185,38 @@ function renderStreakCalendar() {
 /* ---------- クイズ ---------- */
 function startQuiz(categoryId) {
   forcedCategory = categoryId || null;
+  revengeMode = false;
+  goalPending = false;
   inTodaySession = !forcedCategory;     // 「今日の問題」のときだけチャレンジを混ぜる
   if (inTodaySession) sinceChallenge = 0;
+  nextQuestion();
+  showView("view-quiz");
+}
+
+/* --- リベンジ（まちがえた問題だけ復習） --- */
+// まだマスターしていない（箱が低い）まちがえたことのある問題
+function revengePool() {
+  return QUESTIONS.filter((q) => {
+    const it = state.items[q.id];
+    return it && it.wrong > 0 && (it.box || 0) <= 2;
+  });
+}
+
+function renderRevengeButton() {
+  const btn = document.getElementById("start-revenge");
+  if (!btn) return;
+  const n = revengePool().length;
+  btn.classList.toggle("hidden", n === 0);
+  document.getElementById("revenge-count").textContent = n ? `（${n}問）` : "";
+}
+
+function startRevenge() {
+  const pool = revengePool();
+  if (!pool.length) { toast("リベンジする問題がないよ！すごい！🎉"); return; }
+  forcedCategory = null;
+  inTodaySession = false;   // リベンジ中は記述チャレンジをはさまない
+  revengeMode = true;
+  goalPending = false;
   nextQuestion();
   showView("view-quiz");
 }
@@ -201,7 +235,18 @@ function pickChallenge() {
 function nextQuestion() {
   answered = false;
   let q;
-  if (forcedCategory) {
+  if (revengeMode) {
+    // まちがえた問題の中から選ぶ。なくなったらおめでとうを出してホームへ
+    let pool = revengePool();
+    if (!pool.length) {
+      toast("⚔️ リベンジ完了！ぜんぶやっつけたよ！🎉");
+      revengeMode = false;
+      renderHome(); renderHeader(); showView("view-home");
+      return;
+    }
+    const rest = pool.filter((x) => x.id !== lastQId);
+    q = chooseFromPool(rest.length ? rest : pool);
+  } else if (forcedCategory) {
     // その分野の中から、適応ロジックの考え方で1問選ぶ
     const pool = QUESTIONS.filter((x) => x.category === forcedCategory && x.id !== lastQId);
     const list = pool.length ? pool : QUESTIONS.filter((x) => x.category === forcedCategory);
@@ -323,12 +368,16 @@ function submitAnswer(value, btnEl) {
 
   // 今日のカウント・ストリーク
   state.todayCount += 1;
+  // 目標にちょうど届いたら、次の「つぎの問題」で「今日はここまで？」を聞く
+  if (state.todayCount === state.dailyGoal) goalPending = true;
+  // 「あと3問だけ」の消化
+  if (extraLeft > 0) { extraLeft--; if (extraLeft === 0) { goalPending = true; extraLeft = -1; } }
   // 1日ごとの実施問題数・正答数を記録（カレンダー・学習履歴で使う）
   const todayKey = Store.todayStr();
   state.dailyCounts[todayKey] = (state.dailyCounts[todayKey] || 0) + 1;
   if (correct) state.dailyCorrect[todayKey] = (state.dailyCorrect[todayKey] || 0) + 1;
   const beforeStreak = state.streak;
-  Gamify.updateStreak(state);
+  const streakInfo = Gamify.updateStreak(state);
 
   // バッジ判定
   const newBadges = Gamify.checkNewBadges(state);
@@ -352,10 +401,14 @@ function submitAnswer(value, btnEl) {
   feedback.innerHTML = html;
 
   if (newBadges.length) showBadgePopup(newBadges);
-  if (state.streak > beforeStreak && state.streak >= 2) {
+  if (streakInfo && streakInfo.charmUsed) {
+    toast("🛡 おまもりが連続日数を守ってくれたよ！");
+  } else if (state.streak > beforeStreak && state.streak >= 2) {
     toast(`🔥 ${state.streak}日れんぞく達成！`);
   }
-  if (state.todayCount === state.dailyGoal) {
+  if (revengeMode && correct) {
+    toast("⚔️ リベンジ成功！");
+  } else if (state.todayCount === state.dailyGoal) {
     toast("🎯 今日の目標たっせい！えらい！");
   }
 
@@ -647,12 +700,13 @@ function gradeChallenge(done) {
   }
 
   const beforeStreak = state.streak;
-  Gamify.updateStreak(state);
+  const streakInfo = Gamify.updateStreak(state);
   const newBadges = Gamify.checkNewBadges(state);
   Store.saveState(state);
 
   if (newBadges.length) showBadgePopup(newBadges);
-  if (state.streak > beforeStreak && state.streak >= 2) toast(`🔥 ${state.streak}日れんぞく達成！`);
+  if (streakInfo && streakInfo.charmUsed) toast("🛡 おまもりが連続日数を守ってくれたよ！");
+  else if (state.streak > beforeStreak && state.streak >= 2) toast(`🔥 ${state.streak}日れんぞく達成！`);
   toast(done ? (alreadyDone ? "復習できたね！＋5XP ✍️" : "よく書けたね！記録したよ ✍️") : "もう一度ちょうせんしてみよう！");
   renderHeader();
 
@@ -699,6 +753,16 @@ function init() {
   renderHome();
 
   document.getElementById("start-today").onclick = () => startQuiz(null);
+  document.getElementById("start-revenge").onclick = startRevenge;
+
+  // 記述チャレンジの文型テンプレート（タップで入力欄に追加）
+  document.querySelectorAll(".tpl-chip").forEach((b) => {
+    b.onclick = () => {
+      const inp = document.getElementById("ch-input");
+      inp.value = (inp.value ? inp.value.replace(/\s+$/, "") + "\n" : "") + b.dataset.tpl;
+      inp.focus();
+    };
+  });
   document.getElementById("submit-btn").onclick = () => {
     const inp = document.getElementById("answer-input");
     if (inp) submitAnswer(inp.value, null);
@@ -707,9 +771,26 @@ function init() {
     // 答え合わせ直後（同じEnterキーの押し下げ）で次に飛ばないようにする。
     // 解説を読まずにスキップするのを防ぎ、もう一度Enter/クリックで次へ進める。
     if (Date.now() - lastSubmitAt < 350) return;
-    // 目標達成後はホームにもどるか聞かずに続ける（やめたいときは戻るボタン）
+    // 目標を達成した直後は「今日はここまで？」を聞く（やめどきを作る）
+    if (goalPending) {
+      goalPending = false;
+      document.getElementById("goal-msg").textContent =
+        `今日は ${state.todayCount}問 といたよ。ここでやめても、つづけてもえらい！`;
+      document.getElementById("goal-modal").classList.remove("hidden");
+      return;
+    }
     nextQuestion();
   };
+
+  // 目標達成モーダル
+  const closeGoal = () => document.getElementById("goal-modal").classList.add("hidden");
+  document.getElementById("goal-stop").onclick = () => {
+    closeGoal();
+    toast("おつかれさま！また明日🌟");
+    renderHome(); renderHeader(); showView("view-home");
+  };
+  document.getElementById("goal-more3").onclick = () => { closeGoal(); extraLeft = 3; nextQuestion(); };
+  document.getElementById("goal-keep").onclick = () => { closeGoal(); nextQuestion(); };
   document.getElementById("hint-btn").onclick = showHint;
   document.getElementById("quit-quiz").onclick = () => { renderHome(); renderHeader(); showView("view-home"); };
 

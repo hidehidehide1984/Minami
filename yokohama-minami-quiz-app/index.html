@@ -54,6 +54,7 @@
       </div>
 
       <button class="big-btn" id="start-today">▶ 今日の問題をはじめる</button>
+      <button class="big-btn revenge hidden" id="start-revenge">⚔️ リベンジ！まちがえた問題 <span id="revenge-count"></span></button>
       <p class="advice" id="advice"></p>
 
       <div class="card challenge-entry">
@@ -149,6 +150,13 @@
         <div class="ch-passage" id="ch-passage"></div>
         <div class="ch-material" id="ch-material"></div>
         <p class="q-text" id="ch-question"></p>
+        <div class="tpl-row">
+          <span class="tpl-label">✏️ 書き出しのヒント（タップで入る）</span>
+          <button class="tpl-chip" data-tpl="理由は、＿＿だからです。">理由は、…だから</button>
+          <button class="tpl-chip" data-tpl="資料から、＿＿が分かります。">資料から、…が分かる</button>
+          <button class="tpl-chip" data-tpl="私は＿＿と考えます。なぜなら＿＿だからです。">私は…と考える。なぜなら…</button>
+          <button class="tpl-chip" data-tpl="まず＿＿、次に＿＿、だから＿＿です。">まず…、次に…、だから…</button>
+        </div>
         <textarea id="ch-input" class="ch-input" rows="6" placeholder="ここに答えを書こう（とちゅうでもOK）"></textarea>
         <div class="hint-box hidden" id="ch-hint"></div>
         <div class="quiz-actions">
@@ -167,6 +175,19 @@
   </nav>
 
   <!-- バッジ獲得モーダル -->
+  <!-- 目標達成モーダル（やめどきを作る） -->
+  <div class="modal hidden" id="goal-modal">
+    <div class="modal-card">
+      <h2>🎯 今日の目標たっせい！</h2>
+      <p class="goal-msg" id="goal-msg"></p>
+      <button class="primary-btn" id="goal-stop">今日はここまで 🎉</button>
+      <div class="modal-actions">
+        <button class="ghost-btn" id="goal-more3">あと3問だけ</button>
+        <button class="ghost-btn" id="goal-keep">まだつづける！</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal hidden" id="badge-modal">
     <div class="modal-card">
       <h2>🎉 新しいバッジ！</h2>

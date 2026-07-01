@@ -18,19 +18,32 @@ function xpToNext() {
 }
 
 // 連続日数を更新する（その日初めての学習で呼ぶ）
+// 戻り値 { charmUsed } … 「ストリークおまもり」で連続日数を守ったかどうか
 function updateStreak(state) {
   const today = Store.todayStr();
-  if (state.lastStudyDate === today) return; // 今日はもう数えた
+  if (state.lastStudyDate === today) return { charmUsed: false }; // 今日はもう数えた
 
+  let charmUsed = false;
   if (state.lastStudyDate) {
     const gap = Store.daysBetween(state.lastStudyDate, today);
-    if (gap === 1) state.streak += 1;        // 昨日もやっていた → のびる
-    else if (gap > 1) state.streak = 1;      // 間があいた → 1からやり直し
+    const month = today.slice(0, 7);
+    if (gap === 1) {
+      state.streak += 1;                     // 昨日もやっていた → のびる
+    } else if (gap === 2 && state.streak >= 2 && state.charmUsedMonth !== month) {
+      // 1日だけお休み → 月1回の「おまもり」で連続日数を守る
+      state.streak += 1;
+      state.charmUsedMonth = month;
+      charmUsed = true;
+    } else if (gap > 1) {
+      if (state.streak >= 3) state.comeback = true; // お休みのあと戻ってきた
+      state.streak = 1;                      // 間があいた → 1からやり直し
+    }
   } else {
     state.streak = 1;                        // はじめての学習
   }
   state.lastStudyDate = today;
   if (!state.studyDates.includes(today)) state.studyDates.push(today);
+  return { charmUsed };
 }
 
 // バッジの定義
@@ -48,6 +61,7 @@ const BADGES = [
   { id: "writer",   name: "記述デビュー",   emoji: "✍️", desc: "適性検査チャレンジに初挑戦",   check: (s) => Object.keys(s.challengeDone || {}).length >= 1 },
   { id: "today3",   name: "今日3問",       emoji: "🌼", desc: "1日に3問ちょうせん",         check: (s) => s.todayCount >= 3 },
   { id: "writer3",  name: "記述3問",       emoji: "📝", desc: "記述チャレンジを3問やりとげた", check: (s) => Object.keys(s.challengeDone || {}).length >= 3 },
+  { id: "comeback", name: "おかえり！",     emoji: "🌈", desc: "お休みのあと、また戻ってきた",  check: (s) => !!s.comeback },
 ];
 
 // 取得していないバッジで、条件を満たしたものを返す（新しく取れたバッジ）
