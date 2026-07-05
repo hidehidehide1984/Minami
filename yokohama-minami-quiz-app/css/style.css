@@ -194,6 +194,10 @@ main { max-width: 620px; margin: 0 auto; padding: 16px; }
 .q-level { color: var(--accent); font-size: 15px; letter-spacing: 2px; }
 .q-text { font-size: 19px; font-weight: 700; line-height: 1.7; margin: 6px 0 18px; }
 
+/* 図（SVG）表示枠。問題文の下に中央ぞろえで表示する。 */
+.q-figure { margin: 0 0 18px; text-align: center; }
+.q-figure svg { max-width: 100%; height: auto; background: #fff; border: 1px solid var(--line, #e3e3ef); border-radius: 12px; padding: 10px; }
+
 .answer-input {
   width: 100%; font-size: 18px; padding: 14px;
   border: 2px solid #d4dbf0; border-radius: 12px; outline: none;

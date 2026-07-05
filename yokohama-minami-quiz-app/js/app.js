@@ -292,6 +292,16 @@ function renderQuestion(q) {
   document.getElementById("q-level").textContent = "★".repeat(q.level) + "☆".repeat(3 - q.level);
   document.getElementById("q-text").textContent = q.q;
 
+  // 図（SVG）がある問題は問題文の下に表示する。問題バンクは信頼できる自作データ。
+  const fig = document.getElementById("q-figure");
+  if (q.svg) {
+    fig.innerHTML = q.svg;
+    fig.classList.remove("hidden");
+  } else {
+    fig.innerHTML = "";
+    fig.classList.add("hidden");
+  }
+
   const ansArea = document.getElementById("answer-area");
   ansArea.innerHTML = "";
   const feedback = document.getElementById("feedback");
