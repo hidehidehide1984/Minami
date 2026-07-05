@@ -776,8 +776,22 @@ function renderSyncUI() {
         renderSyncUI();
       }
     };
+    // 保護者むけ「みまもりURL」（別端末で開くと閲覧専用で様子が見られる）
+    const b3 = document.createElement("button");
+    b3.className = "ghost-btn small";
+    b3.textContent = "👨‍👩‍👧 みまもりURLをコピー";
+    b3.onclick = () => {
+      const url = new URL("mimamori.html?code=" + encodeURIComponent(code), location.href).href;
+      const done = () => toast("みまもりURLをコピーしたよ！おうちの人に送ってね");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done, () => prompt("このURLをコピーしてね", url));
+      } else {
+        prompt("このURLをコピーしてね", url);
+      }
+    };
     btns.appendChild(b1);
     btns.appendChild(b2);
+    btns.appendChild(b3);
   }
 }
 

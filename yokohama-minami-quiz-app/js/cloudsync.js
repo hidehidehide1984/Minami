@@ -215,6 +215,7 @@
     mergeStates, exportBackup, importBackupFile,
     isConfigured, getSyncCode, setSyncCode, newSyncCode,
     syncNow, init: initCloudSync,
+    pull: pullRemote,   // 読み取り専用（みまもり画面が使用）
     status: () => ({ lastSyncAt, lastError }),
   };
 })();

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>みまもり｜南中チャレンジ</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="logo">🦉</span>
+      <span class="brand-name">みまもり</span>
+    </div>
+    <div class="header-stats">
+      <span class="chip" id="mm-exam"></span>
+      <button class="icon-btn" id="mm-refresh" title="更新">🔄</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- コード入力（URLにコードが無いとき） -->
+    <section class="view active" id="mm-input-view" style="display:none">
+      <h1 class="page-title">👨‍👩‍👧 みまもり</h1>
+      <p class="advice">お子さんのスマホの ⚙️せってい → ☁️クラウド同期 に表示されている<br><b>同期コード</b>を入れると、学習の様子が見られます。</p>
+      <div class="card">
+        <label class="field">同期コード
+          <input type="text" id="mm-code-input" placeholder="minami-XXXX-XXXX-XXXX" autocomplete="off" />
+        </label>
+        <button class="primary-btn" id="mm-code-go" style="width:100%">みまもりをはじめる</button>
+      </div>
+      <p class="readiness-note" id="mm-input-note"></p>
+    </section>
+
+    <!-- ダッシュボード -->
+    <section class="view" id="mm-dash-view" style="display:none">
+      <h1 class="page-title" id="mm-title">📊 学習のようす</h1>
+
+      <div class="card readiness-card">
+        <div class="card-head"><span>🎓 合格めやす</span><span class="countdown" id="mm-exam2"></span></div>
+        <div class="readiness-main">
+          <div class="readiness-score"><span id="mm-score">0</span><span class="readiness-unit">%</span></div>
+          <div class="readiness-info">
+            <div class="readiness-stage" id="mm-stage"></div>
+            <div class="bar"><div class="bar-fill readiness-fill" id="mm-score-fill"></div></div>
+          </div>
+        </div>
+        <div class="readiness-note">※アプリの練習にもとづくめやすです（本番の合格率ではありません）。</div>
+      </div>
+
+      <div class="totals">
+        <div class="total-box"><div class="total-num" id="mm-week-days">0</div><div class="total-lbl">今週の学習日数</div></div>
+        <div class="total-box"><div class="total-num" id="mm-week-q">0</div><div class="total-lbl">今週の問題数</div></div>
+        <div class="total-box"><div class="total-num" id="mm-rate">0%</div><div class="total-lbl">全体の正答率</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span>📅 この2週間のがんばり</span></div>
+        <div class="streak-cal" id="mm-cal"></div>
+      </div>
+
+      <h2 class="section-title">分野ごとの正答率</h2>
+      <div class="cat-stats" id="mm-cats"></div>
+
+      <div class="card parent-card">
+        <div class="card-head"><span>👨‍👩‍👧 おうちの方へ</span></div>
+        <ul class="parent-points" id="mm-points"></ul>
+      </div>
+
+      <p class="readiness-note" id="mm-updated"></p>
+      <button class="link-btn" id="mm-change">別のコードにする／みまもりをやめる</button>
+    </section>
+
+    <!-- 状態メッセージ -->
+    <p class="advice" id="mm-msg" style="display:none"></p>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/gamify.js"></script>
+  <script src="js/cloudsync.js"></script>
+  <script src="js/mimamori.js"></script>
+</body>
+</html>

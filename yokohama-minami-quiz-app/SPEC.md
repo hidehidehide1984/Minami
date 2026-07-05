@@ -25,6 +25,7 @@
 ```
 yokohama-minami-quiz-app/
 ├── index.html          画面の骨組み（全ビューを1ページに内包、SPA的に切替）
+├── mimamori.html       保護者むけ みまもり画面（閲覧専用ダッシュボード）
 ├── css/style.css       見た目（スマホ最適化）
 ├── SETUP_FIREBASE.md   クラウド同期のセットアップ手順（利用者向け）
 └── js/
@@ -35,8 +36,11 @@ yokohama-minami-quiz-app/
     ├── cloudsync.js       バックアップ＆クラウド同期・マージ → window.CloudSync
     ├── gamify.js          レベル/ストリーク/バッジ/合格めやす → window.Gamify
     ├── adaptive.js        適応出題ロジック・間隔反復       → window.Adaptive
-    └── app.js             画面制御・答え合わせ・各機能の結線
+    ├── app.js             画面制御・答え合わせ・各機能の結線
+    └── mimamori.js        みまもり画面（閲覧専用ダッシュボード）
 ```
+`mimamori.html` のスクリプト読み込み順：
+`firebase-config.js → storage.js → gamify.js → cloudsync.js → mimamori.js`（questions.js/app.js は読まない。CATEGORIES は mimamori.js に小さくインライン）
 `index.html` のスクリプト読み込み順（依存関係）:
 `questions.js → challenges.js → storage.js → firebase-config.js → cloudsync.js → gamify.js → adaptive.js → app.js`
 
@@ -291,6 +295,15 @@ score = round( (acc*0.30 + weakest*0.25 + coverage*0.20 + volume*0.15 + consiste
 - 設定画面UI：未設定→案内文のみ／未接続→「☁️新しくはじめる」「🔑コードを入力」／接続中→コード表示・最終同期時刻・「🔄いますぐ同期」「同期をやめる」。
 - セキュリティ：Firestoreルールで `progress/{code}` の get/create/update のみ許可（`data` は string・300KB未満に制限）、**list/delete 禁止**。コードが実質のパスワード。個人情報はニックネームのみ。
 - セットアップ手順は `SETUP_FIREBASE.md`（プロジェクト作成→Firestore作成(asia-northeast1)→ルール貼り付け→apiKey/projectId取得→config記入）。
+
+## 7.6 みまもり画面（mimamori.html・保護者むけ・閲覧専用）
+
+- 目的：お子さんはスマホで学習、保護者は**別端末から見るだけ**。同期コードで結ぶ。
+- アクセス：`mimamori.html?code=<同期コード>`（ブックマーク可）。コードが無ければ入力画面を出す。
+- 本体アプリ側：同期中の設定画面に「👨‍👩‍👧 みまもりURLをコピー」ボタン（`mimamori.html?code=CODE` をクリップボードへ）。
+- 動作：`CloudSync.pull(code)`（**読み取り専用**GET）で state を取得 → ダッシュボード描画。**書き込み・マージは一切しない**（子の記録を変えない）。1分ごと自動更新＋🔄手動更新。
+- 表示：お子さん名、受験カウントダウン、合格めやす（`Gamify.readiness`）、今週の学習日数/問題数、全体正答率、2週間カレンダー、分野別正答率、保護者向け褒めポイント、最終更新時刻。
+- 状態分岐：未設定（config空）→案内、コード無し→入力、docなし→「まだ記録がありません」、通信失敗→再入力案内。
 
 ## 8. デプロイ（GitHub Pages）
 - 静的サイトなので、リポジトリのサブフォルダをそのまま公開。
