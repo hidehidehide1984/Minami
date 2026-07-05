@@ -9,6 +9,6 @@
  * Firestoreのセキュリティルール側で行います）。
  */
 window.FIREBASE_CONFIG = {
-  apiKey: "",     // 例 "AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  projectId: "",  // 例 "minami-quiz-12345"
+  apiKey: "AIzaSyBT7WAuUy51NzENH-x3FrFDkuhO4_pyu_4",
+  projectId: "minami-quiz",
 };
