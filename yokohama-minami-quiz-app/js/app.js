@@ -723,6 +723,77 @@ function gradeChallenge(done) {
   window.scrollTo(0, 0);
 }
 
+/* ---------- クラウド同期・バックアップ（設定内） ---------- */
+function renderSyncUI() {
+  const status = document.getElementById("sync-status");
+  const btns = document.getElementById("sync-btns");
+  if (!status || !btns) return;
+  btns.innerHTML = "";
+
+  if (!CloudSync.isConfigured()) {
+    status.innerHTML = "未設定です。<b>SETUP_FIREBASE.md</b> の手順で設定すると、ほかの端末と記録を同期できます。";
+    return;
+  }
+  const code = CloudSync.getSyncCode();
+  if (!code) {
+    status.textContent = "同期していません。新しくはじめるか、ほかの端末のコードを入力してね。";
+    const b1 = document.createElement("button");
+    b1.className = "ghost-btn small";
+    b1.textContent = "☁️ 新しくはじめる";
+    b1.onclick = () => connectSync(CloudSync.newSyncCode(), true);
+    const b2 = document.createElement("button");
+    b2.className = "ghost-btn small";
+    b2.textContent = "🔑 コードを入力";
+    b2.onclick = () => {
+      const c = (prompt("同期コードを入力してね（例 minami-XXXX-XXXX-XXXX）") || "").trim();
+      if (!c) return;
+      if (!/^minami-/i.test(c)) { toast("コードは minami- ではじまるよ"); return; }
+      connectSync(c, false);
+    };
+    btns.appendChild(b1);
+    btns.appendChild(b2);
+  } else {
+    const st = CloudSync.status();
+    status.innerHTML =
+      `同期中 🔑 <b class="sync-code">${code}</b><br>` +
+      (st.lastSyncAt ? `最終同期：${new Date(st.lastSyncAt).toLocaleString("ja-JP")}` : "まだ同期していません") +
+      (st.lastError ? "<br>⚠️ 前回の同期に失敗（ネットを確認してね）" : "");
+    const b1 = document.createElement("button");
+    b1.className = "ghost-btn small";
+    b1.textContent = "🔄 いますぐ同期";
+    b1.onclick = async () => {
+      toast("☁️ 同期中…");
+      try { await CloudSync.syncNow(); toast("☁️ 同期できたよ！"); }
+      catch (e) { toast("同期できなかった…ネットをかくにんしてね"); }
+      renderSyncUI();
+    };
+    const b2 = document.createElement("button");
+    b2.className = "ghost-btn small";
+    b2.textContent = "同期をやめる";
+    b2.onclick = () => {
+      if (confirm("この端末の同期をやめますか？（記録は消えません）")) {
+        CloudSync.setSyncCode("");
+        renderSyncUI();
+      }
+    };
+    btns.appendChild(b1);
+    btns.appendChild(b2);
+  }
+}
+
+async function connectSync(code, isNew) {
+  toast("☁️ つないでいます…");
+  CloudSync.setSyncCode(code);
+  try {
+    await CloudSync.syncNow();
+    toast(isNew ? "☁️ 同期をはじめたよ！コードをメモしてね" : "☁️ つながったよ！");
+  } catch (e) {
+    CloudSync.setSyncCode("");
+    toast("つながらなかった…設定やネットをかくにんしてね");
+  }
+  renderSyncUI();
+}
+
 /* ---------- 設定（名前・目標・リセット） ---------- */
 function openSettings() {
   document.getElementById("set-name").value = state.name || "";
@@ -733,6 +804,7 @@ function openSettings() {
     const days = Store.daysBetween(Store.todayStr(), state.examDate);
     examNote.textContent = `🎯 受験日：${y}年${+m}月${+d}日` + (days > 0 ? `（あと${days}日）` : "");
   }
+  renderSyncUI();
   document.getElementById("settings-modal").classList.remove("hidden");
 }
 function saveSettings() {
@@ -749,8 +821,35 @@ function saveSettings() {
 
 /* ---------- 初期化・イベント ---------- */
 function init() {
+  // クラウド同期（設定済み＆コードがあれば起動時に自動同期。保存のたび自動送信）
+  CloudSync.init({
+    getState: () => state,
+    setState: (s) => { state = s; Store.saveState(state); },
+    onUpdated: () => { renderHeader(); renderHome(); },
+  });
+
   renderHeader();
   renderHome();
+
+  // バックアップ（書き出し／読み込み）
+  document.getElementById("backup-export").onclick = () => {
+    CloudSync.exportBackup(state);
+    toast("📤 きろくを書き出したよ！");
+  };
+  document.getElementById("backup-import-btn").onclick = () =>
+    document.getElementById("backup-import").click();
+  document.getElementById("backup-import").addEventListener("change", (e) => {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    CloudSync.importBackupFile(f, (obj) => {
+      state = CloudSync.mergeStates(state, obj);
+      Store.saveState(state);
+      renderHeader(); renderHome();
+      renderSyncUI();
+      toast("📥 きろくを読み込んで合体したよ！");
+    }, () => toast("読み込めなかった…ファイルをかくにんしてね"));
+  });
 
   document.getElementById("start-today").onclick = () => startQuiz(null);
   document.getElementById("start-revenge").onclick = startRevenge;

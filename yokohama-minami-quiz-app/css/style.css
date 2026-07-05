@@ -311,6 +311,15 @@ main { max-width: 620px; margin: 0 auto; padding: 16px; }
   border: 2px solid #d4dbf0; border-radius: 10px; font-size: 16px;
 }
 .modal-actions { display: flex; gap: 10px; margin-top: 6px; }
+
+/* 同期・バックアップ（設定内） */
+.sync-box { text-align: left; border-top: 1px dashed #d4dbf0; margin: 4px 0 12px; padding-top: 10px; }
+.sync-title { font-size: 13px; font-weight: 800; margin: 8px 0 4px; }
+.sync-status { font-size: 12px; color: var(--muted); margin: 0 0 8px; line-height: 1.7; word-break: break-all; }
+.sync-code { color: var(--primary); }
+.sync-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.ghost-btn.small { padding: 8px 12px; font-size: 13px; flex: none; }
+
 .goal-msg { font-size: 14px; color: var(--muted); margin: 0 0 14px; }
 #goal-modal .primary-btn { width: 100%; margin-bottom: 10px; }
 #goal-modal .ghost-btn { flex: 1; }

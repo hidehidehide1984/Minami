@@ -26,16 +26,19 @@
 yokohama-minami-quiz-app/
 ├── index.html          画面の骨組み（全ビューを1ページに内包、SPA的に切替）
 ├── css/style.css       見た目（スマホ最適化）
+├── SETUP_FIREBASE.md   クラウド同期のセットアップ手順（利用者向け）
 └── js/
-    ├── questions.js    4択問題バンク（約1940問）   → window.QUESTIONS, window.CATEGORIES
-    ├── challenges.js   適性検査チャレンジ（記述12問） → window.CHALLENGES
-    ├── storage.js      localStorage 保存/読込・移行   → window.Store
-    ├── gamify.js       レベル/ストリーク/バッジ/合格めやす → window.Gamify
-    ├── adaptive.js     適応出題ロジック・間隔反復       → window.Adaptive
-    └── app.js          画面制御・答え合わせ・各機能の結線
+    ├── questions.js       4択問題バンク（約1940問）   → window.QUESTIONS, window.CATEGORIES
+    ├── challenges.js      適性検査チャレンジ（記述12問） → window.CHALLENGES
+    ├── storage.js         localStorage 保存/読込・移行   → window.Store
+    ├── firebase-config.js Firebase設定値（apiKey/projectId。空=同期オフ）
+    ├── cloudsync.js       バックアップ＆クラウド同期・マージ → window.CloudSync
+    ├── gamify.js          レベル/ストリーク/バッジ/合格めやす → window.Gamify
+    ├── adaptive.js        適応出題ロジック・間隔反復       → window.Adaptive
+    └── app.js             画面制御・答え合わせ・各機能の結線
 ```
 `index.html` のスクリプト読み込み順（依存関係）:
-`questions.js → challenges.js → storage.js → gamify.js → adaptive.js → app.js`
+`questions.js → challenges.js → storage.js → firebase-config.js → cloudsync.js → gamify.js → adaptive.js → app.js`
 
 ---
 
@@ -263,6 +266,31 @@ score = round( (acc*0.30 + weakest*0.25 + coverage*0.20 + volume*0.15 + consiste
 - **1日の目標 dailyGoal 既定 = 30問**（設定で変更可、初回のみ自動で30へ移行）。
 
 ---
+
+## 7.5 バックアップ＆クラウド同期（cloudsync.js）
+
+### バックアップ（ネット不要）
+- 設定画面から記録JSONをファイルに**書き出し**（`minami-kiroku-YYYY-MM-DD.json`）／**読み込み**。
+- 読み込みは上書きではなく `mergeStates` で**合成**する。
+
+### マージ規則 `mergeStates(a, b)`（クラウド同期と共用・順序対称）
+- xp / coins / totalAnswered / totalCorrect / streak → **大きい方**
+- badges / studyDates / challengeDone → **和集合**
+- dailyCounts / dailyCorrect → **日付ごとに大きい方**
+- cat（分野別成績）→ 分野ごとに **seen が大きい方**
+- items（問題別SRS）→ 問題ごとに **lastDate が新しい方**（同日なら seen が大きい方）
+- todayCount/todayDate → 同日なら大きい方、違う日なら**新しい日**のもの
+- name/dailyGoal はローカル優先、comeback/goalV2 は OR、charmUsedMonth は新しい月
+
+### クラウド同期（Firebase Firestore REST・SDK不使用）
+- 設定：`js/firebase-config.js` の `window.FIREBASE_CONFIG = { apiKey, projectId }`。**空なら同期UIは「未設定」表示のみで、アプリは完全にオフライン動作**。
+- 識別：**同期コード**（`minami-` + 紛らわしい文字を除いた英数12字、`crypto.getRandomValues` 生成）。localStorage の別キー `minami_sync_code` に保存（stateには含めない）。
+- 保存先：`projects/{projectId}/databases/(default)/documents/progress/{同期コード}` に
+  `{ data: stringValue(JSON全体), updatedAt: integerValue }` の1ドキュメント。REST を `?key=apiKey` 付き fetch で GET / PATCH。
+- 同期タイミング：**起動時**に pull→merge→setState→push。**保存のたび**（`Store.saveState` をラップ）3秒デバウンスで push。失敗は静かに無視（オフライン優先）。
+- 設定画面UI：未設定→案内文のみ／未接続→「☁️新しくはじめる」「🔑コードを入力」／接続中→コード表示・最終同期時刻・「🔄いますぐ同期」「同期をやめる」。
+- セキュリティ：Firestoreルールで `progress/{code}` の get/create/update のみ許可（`data` は string・300KB未満に制限）、**list/delete 禁止**。コードが実質のパスワード。個人情報はニックネームのみ。
+- セットアップ手順は `SETUP_FIREBASE.md`（プロジェクト作成→Firestore作成(asia-northeast1)→ルール貼り付け→apiKey/projectId取得→config記入）。
 
 ## 8. デプロイ（GitHub Pages）
 - 静的サイトなので、リポジトリのサブフォルダをそのまま公開。
