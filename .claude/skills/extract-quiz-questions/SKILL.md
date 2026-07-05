@@ -37,6 +37,13 @@ description: >-
   choices: ["75°", "85°", "105°", "65°"], answer: "75°",
   hint: "…", exp: "…" }
 ```
+**図問題を大量に増やしたい場合**は、パラメトリック生成器を使う:
+`node .claude/skills/extract-quiz-questions/scripts/gen-figure-questions.js`
+→ `yokohama-minami-quiz-app/js/questions-figures.js` を生成（`window.QUESTIONS`
+に concat。`index.html` で `questions.js` の直後に読み込む）。答えが作り方から
+必ず正しい種類（角度和・面積・分数・割合・数列など）だけを生成する。カテゴリ配分や
+問題数はスクリプト内の各 family の cap で調整する。生成ファイルは手編集しない。
+
 図の方針:
 - **オリジナルのSVGを自作**する（歯車・回路・点の並び・図形・簡単なグラフ等）。
   過去問の図をそのまま貼らない（著作権・画質・容量の問題を避ける）。
