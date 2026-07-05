@@ -174,8 +174,8 @@ function rowsDots(counts) {
 // Z1 三角形の内角
 (function () {
   let n = 0;
-  for (let a = 25; a <= 140 && n < 190; a += 5)
-    for (let b = a; b <= 150 && n < 190; b += 5) {
+  for (let a = 25; a <= 140 && n < 285; a += 5)
+    for (let b = a; b <= 150 && n < 285; b += 5) {
       const ans = 180 - a - b;
       if (ans < 25 || ans > 130) continue;
       add("zukei", 2,
@@ -190,7 +190,7 @@ function rowsDots(counts) {
 // Z2 直線上の角
 (function () {
   let n = 0;
-  for (let a = 20; a <= 160 && n < 71; a += 2) {
+  for (let a = 20; a <= 160 && n < 130; a += 1) {
     const ans = 180 - a;
     add("zukei", 1,
       `一直線の上に角があります。片方が${a}°のとき、もう片方（？）は何度？`,
@@ -204,8 +204,8 @@ function rowsDots(counts) {
 // Z3 一点のまわりの角
 (function () {
   let n = 0;
-  for (let a = 60; a <= 160 && n < 70; a += 10)
-    for (let b = 60; b <= 200 && n < 70; b += 10) {
+  for (let a = 60; a <= 160 && n < 110; a += 10)
+    for (let b = 60; b <= 200 && n < 110; b += 10) {
       const ans = 360 - a - b;
       if (ans < 40 || ans > 240) continue;
       add("zukei", 2,
